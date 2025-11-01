@@ -187,6 +187,11 @@ type YouTubePlaylistRenderer = z.infer<typeof YouTubePlaylistRendererSchema>
 export function parseItem(
 	item: Record<string, unknown>,
 ): Video | Playlist | null {
+	if ('lockupViewModel' in item) {
+		return parsePlaylistFromLockup(
+			item.lockupViewModel as Record<string, unknown>,
+		)
+	}
 	const parsed = YouTubeItemSchema.safeParse(item)
 	if (!parsed.success) {
 		return null
@@ -337,6 +342,141 @@ function parseOwner(obj: YouTubePlaylistRenderer): Author | null {
 
 	try {
 		return AuthorSchema.parse(result)
+	} catch {
+		return null
+	}
+}
+
+function parsePlaylistFromLockup(
+	lockup: Record<string, unknown>,
+): Playlist | null {
+	try {
+		// Extract playlist ID
+		const contentId = lockup.contentId
+		if (typeof contentId !== 'string') return null
+
+		// Extract metadata
+		const metadata = lockup.metadata
+		if (!metadata || typeof metadata !== 'object') return null
+		const metadataObj = metadata as Record<string, unknown>
+
+		const lockupMetadataViewModel = metadataObj.lockupMetadataViewModel
+		if (!lockupMetadataViewModel || typeof lockupMetadataViewModel !== 'object')
+			return null
+		const lockupMeta = lockupMetadataViewModel as Record<string, unknown>
+
+		// Extract title
+		const title = lockupMeta.title
+		if (!title || typeof title !== 'object') return null
+		const titleObj = title as Record<string, unknown>
+		const name = titleObj.content
+		if (typeof name !== 'string') return null
+
+		// Extract owner from metadata
+		const contentMetadata = lockupMeta.metadata
+		let owner: Author | null = null
+		if (contentMetadata && typeof contentMetadata === 'object') {
+			const contentMeta = contentMetadata as Record<string, unknown>
+			const contentMetaViewModel = contentMeta.contentMetadataViewModel
+			if (contentMetaViewModel && typeof contentMetaViewModel === 'object') {
+				const metaVM = contentMetaViewModel as Record<string, unknown>
+				const metadataRows = metaVM.metadataRows
+				if (Array.isArray(metadataRows) && metadataRows.length > 0) {
+					const firstRow = metadataRows[0]
+					if (firstRow && typeof firstRow === 'object') {
+						const row = firstRow as Record<string, unknown>
+						const metadataParts = row.metadataParts
+						if (Array.isArray(metadataParts) && metadataParts.length > 0) {
+							const firstPart = metadataParts[0]
+							if (firstPart && typeof firstPart === 'object') {
+								const part = firstPart as Record<string, unknown>
+								const text = part.text
+								if (text && typeof text === 'object') {
+									const textObj = text as Record<string, unknown>
+									const ownerName = textObj.content
+									if (typeof ownerName === 'string') {
+										// For lockupViewModel, we don't have full owner info
+										owner = {
+											name: ownerName,
+											channelID: '',
+											url: '',
+											ownerBadges: [],
+											verified: false,
+											bestAvatar: null,
+											avatars: [],
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Extract video count from thumbnail badge
+		let length = 0
+		const contentImage = lockup.contentImage
+		if (contentImage && typeof contentImage === 'object') {
+			const contentImg = contentImage as Record<string, unknown>
+			const collectionThumbnail = contentImg.collectionThumbnailViewModel
+			if (collectionThumbnail && typeof collectionThumbnail === 'object') {
+				const collection = collectionThumbnail as Record<string, unknown>
+				const primaryThumbnail = collection.primaryThumbnail
+				if (primaryThumbnail && typeof primaryThumbnail === 'object') {
+					const primary = primaryThumbnail as Record<string, unknown>
+					const thumbnailViewModel = primary.thumbnailViewModel
+					if (thumbnailViewModel && typeof thumbnailViewModel === 'object') {
+						const thumbnail = thumbnailViewModel as Record<string, unknown>
+						const overlays = thumbnail.overlays
+						if (Array.isArray(overlays)) {
+							for (const overlay of overlays) {
+								if (overlay && typeof overlay === 'object') {
+									const overlayObj = overlay as Record<string, unknown>
+									const badge = overlayObj.thumbnailOverlayBadgeViewModel
+									if (badge && typeof badge === 'object') {
+										const badgeObj = badge as Record<string, unknown>
+										const thumbnailBadges = badgeObj.thumbnailBadges
+										if (Array.isArray(thumbnailBadges)) {
+											for (const tb of thumbnailBadges) {
+												if (tb && typeof tb === 'object') {
+													const tbObj = tb as Record<string, unknown>
+													const tbm = tbObj.thumbnailBadgeViewModel
+													if (tbm && typeof tbm === 'object') {
+														const tbmObj = tbm as Record<string, unknown>
+														const text = tbmObj.text
+														if (typeof text === 'string') {
+															// Extract number from "N videos" or "N episodes"
+															const match = text.match(/(\d+)/)
+															if (match) {
+																length = Number(match[1])
+																break
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		const result = {
+			type: 'playlist' as const,
+			id: contentId,
+			name,
+			url: `https://www.youtube.com/playlist?list=${contentId}`,
+			owner,
+			publishedAt: null,
+			length,
+		}
+
+		return PlaylistSchema.parse(result)
 	} catch {
 		return null
 	}

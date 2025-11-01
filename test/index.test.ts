@@ -1,6 +1,11 @@
 import { expect, test } from 'bun:test'
 import { ytsr } from '../src'
 
+// Disable keepalive for tests to avoid connection pooling issues with YouTube's bot detection
+if (!process.env.YTSR_DISABLE_KEEPALIVE) {
+	process.env.YTSR_DISABLE_KEEPALIVE = 'true'
+}
+
 test('should search for videos', async () => {
 	const result = await ytsr('test', { limit: 1 })
 	expect(result.items).toBeDefined()
@@ -24,11 +29,11 @@ test('should search for videos with options', async () => {
 	}
 })
 
-test.skip('should search for playlists', async () => {
-	// Playlist searching has known timeout issues
+test('should search for playlists', async () => {
 	const result = await ytsr('chill music', { type: 'playlist', limit: 3 })
 	expect(result.items).toBeDefined()
 	expect(Array.isArray(result.items)).toBe(true)
+	expect(result.items.length).toBeGreaterThan(0)
 
 	// Playlists may be empty, so just verify structure if any exist
 	if (result.items.length > 0) {
@@ -49,7 +54,7 @@ test('should respect limit option', async () => {
 })
 
 test('should return video with all expected fields', async () => {
-	const result = await ytsr('test', { limit: 1 })
+	const result = await ytsr('disTube', { limit: 1 })
 	const video = result.items[0]
 
 	if (video && video.type === 'video') {
@@ -65,13 +70,13 @@ test('should return video with all expected fields', async () => {
 	}
 })
 
-test('should support localization options', async () => {
-	const result = await ytsr('test', { hl: 'es', gl: 'MX', limit: 1 })
-	expect(result.items.length).toBeGreaterThan(0)
-})
-
 test('should handle zero results gracefully', async () => {
 	const result = await ytsr('asdfghjklzxcvbnm999111222', { limit: 10 })
 	expect(result.items).toBeDefined()
 	expect(Array.isArray(result.items)).toBe(true)
+})
+
+test('should support localization options', async () => {
+	const result = await ytsr('test', { hl: 'es', gl: 'MX', limit: 1 })
+	expect(result.items.length).toBeGreaterThan(0)
 })

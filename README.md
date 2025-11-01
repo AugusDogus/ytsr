@@ -71,6 +71,22 @@ result.items.forEach(playlist => {
 - `type` ('video' | 'playlist'): Filter by content type (default: 'video')
 - `requestOptions` (RequestInit): Additional fetch options
 
+## Troubleshooting
+
+### Connection Pooling Issues (Bun)
+
+If you're experiencing timeouts or connection issues when using this library with Bun, you may be hitting YouTube's bot detection due to connection pooling. Set the following environment variable to disable HTTP keep-alive:
+
+```bash
+export YTSR_DISABLE_KEEPALIVE=true
+```
+
+Or in your code:
+
+```typescript
+process.env.YTSR_DISABLE_KEEPALIVE = 'true'
+```
+
 ## API
 
 ### `ytsr(query: string, options?: SearchOptions): Promise<VideoResult | PlaylistResult>`

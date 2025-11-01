@@ -196,7 +196,11 @@ export async function doPost(
 	opts: RequestInit,
 	payload: unknown,
 ): Promise<unknown> {
-	const reqOpts = { ...opts, method: 'POST', body: JSON.stringify(payload) }
+	const reqOpts = {
+		...opts,
+		method: 'POST',
+		body: JSON.stringify(payload),
+	}
 	const r = await fetch(url, reqOpts)
 	return r.json()
 }

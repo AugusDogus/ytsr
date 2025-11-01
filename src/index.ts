@@ -137,17 +137,25 @@ export async function ytsr(
 		apiKey: undefined,
 		context: undefined,
 	}
-	if (
+
+	const shouldFetch =
 		!opts.safeSearch ||
 		!CACHE.has('clientVersion') ||
 		!CACHE.has('playlistParams')
-	) {
+
+	if (shouldFetch) {
 		const url = new URL(BASE_SEARCH_URL)
 		for (const [key, value] of Object.entries(opts.query)) {
 			url.searchParams.set(key, value)
 		}
 
-		const res = await fetch(url.toString(), opts.requestOptions)
+		// Disable keepalive if YTSR_DISABLE_KEEPALIVE is set to avoid connection pooling issues with YouTube's bot detection
+		const fetchOpts: RequestInit = opts.requestOptions || {}
+		if (process.env.YTSR_DISABLE_KEEPALIVE === 'true') {
+			fetchOpts.keepalive = false
+		}
+
+		const res = await fetch(url.toString(), fetchOpts)
 		const body = await res.text()
 		parsed = parseBody(body, opts)
 	}
