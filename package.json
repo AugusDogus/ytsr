@@ -1,6 +1,6 @@
 {
 	"name": "@augusdogus/ytsr",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "A modern TypeScript library for anonymous YouTube search requests.",
 	"keywords": [
 		"youtube",
