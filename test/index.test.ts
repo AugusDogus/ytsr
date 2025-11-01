@@ -15,7 +15,7 @@ test('should search for videos', async () => {
 })
 
 test('should search for videos with options', async () => {
-	const result = await ytsr('disTube', { safeSearch: true, limit: 1 })
+	const result = await ytsr('music', { safeSearch: true, limit: 1 })
 	expect(result.items).toBeDefined()
 	expect(result.items.length).toBeGreaterThan(0)
 	const video = result.items[0]
@@ -54,7 +54,7 @@ test('should respect limit option', async () => {
 })
 
 test('should return video with all expected fields', async () => {
-	const result = await ytsr('disTube', { limit: 1 })
+	const result = await ytsr('music', { limit: 1 })
 	const video = result.items[0]
 
 	if (video && video.type === 'video') {

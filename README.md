@@ -30,7 +30,7 @@ npm install @augusdogus/ytsr
 import ytsr from '@augusdogus/ytsr'
 
 // Search for videos
-const result = await ytsr('DisTube', { safeSearch: true, limit: 1 })
+const result = await ytsr('music', { safeSearch: true, limit: 1 })
 
 console.log('Query:', result.query)
 console.log('Total results:', result.results)
