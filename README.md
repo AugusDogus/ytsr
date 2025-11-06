@@ -1,5 +1,7 @@
 # @augusdogus/ytsr
 
+[![CI](https://github.com/augusdogus/ytsr/actions/workflows/ci.yml/badge.svg)](https://github.com/augusdogus/ytsr/actions/workflows/ci.yml) [![npm version](https://img.shields.io/npm/v/@augusdogus/ytsr.svg)](https://www.npmjs.com/package/@augusdogus/ytsr) [![License](https://img.shields.io/npm/l/@augusdogus/ytsr.svg)](https://github.com/augusdogus/ytsr/blob/main/LICENSE) [![Bun](https://img.shields.io/badge/Bun-1.3+-black?logo=bun)](https://bun.sh)
+
 A modern TypeScript library for anonymous YouTube search requests.
 
 ## Features
